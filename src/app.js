@@ -7,6 +7,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import imageRouter from './routes/image.router.js';
+import authRouter from './routes/auth.router.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -18,5 +19,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', imageRouter);
+app.use('/auth', authRouter);
 
 export default app;

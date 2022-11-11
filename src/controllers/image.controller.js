@@ -4,6 +4,7 @@ import multer from "multer";
 import { Img } from "../models/Image.js";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { imageProcessingFailure } from "../utils/imageProcessingFailure.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -49,9 +50,7 @@ export const getImages = async (req, res) => {
 export const uploadImage = (req, res) => {
     upload(req, res, async (err) => {
         try {
-            if (err instanceof multer.MulterError) {
-                throw new Error('Fallo el procesamiento del archivo, Error: ' + `${err.message}`);
-            }
+            imageProcessingFailure(err);
 
             const img = new Img({ name: req.file.filename });
 
@@ -61,25 +60,24 @@ export const uploadImage = (req, res) => {
 
             res.json({upload: "Se guardo la imagen"});
         } catch (error) {
-            res.json(error.message);
+            res.json({error: error.message});
         }
     })
 }
 
+//FALTA RECIBIR EL NUEVO NOMBRE DE LA IMAGEN DEL FRONT Y CAMBIARLO EN EL SERVER Y EN LA DB
 export const editImage = (req, res) => {
     upload(req, res, async (err) => {
         try {
+            imageProcessingFailure(err);
+
             const image = await Img.findById(req.params.id).lean();
-
-            if (err instanceof multer.MulterError) {
-                throw new Error('Fallo el procesamiento del archivo, Error: ' + `${err.message}`.red);
-            }
-
+            
             const dirFile = path.join(__dirname, `../public/images/uploads/${image.name}`);
 
             fs.renameSync(req.file.path, dirFile);
 
-            res.json({ edit: `Se edito la imagen: ${image.name}}` });
+            res.json({ edit: `Se edito la imagen: ${image.name}` });
         } catch (error) {
             res.json({ error: error.message });
         }
