@@ -1,9 +1,9 @@
 import { validationResult, body, param } from "express-validator";
 
 export const middlewareValidationResult = (req, res, next) => {
-    const erros = validationResult(req);
+    const errors = validationResult(req);
 
-    if(!erros.isEmpty()) return res.json({erros: erros.array()});
+    if(!errors.isEmpty()) return res.json({errors: errors.array()});
 
     next(); 
 }

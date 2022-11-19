@@ -37,7 +37,7 @@ const upload = multer({
 
 export const getImages = async (req, res) => {
     try {
-        const images = await Img.find().lean();
+        const images = await Img.find({userID: req.uid}).lean();
 
         if (!images) throw new Error("No hay imagenes en la DB");
 
@@ -52,7 +52,7 @@ export const uploadImage = (req, res) => {
         try {
             imageProcessingFailure(err);
 
-            const img = new Img({ name: req.file.filename });
+            const img = new Img({ name: req.file.filename, userID: req.uid });
 
             await img.save();
 
@@ -72,6 +72,8 @@ export const editImage = (req, res) => {
             imageProcessingFailure(err);
 
             const image = await Img.findById(req.params.id).lean();
+
+            if (!image.userID.equals(req.uid)) throw new Error("No eres el propietario de esta imagen");;
             
             const dirFile = path.join(__dirname, `../public/images/uploads/${image.name}`);
 
@@ -89,6 +91,8 @@ export const deleteImage = async (req, res) => {
         const image = await Img.findById(req.params.id);
 
         if (!image) throw new Error("No se encontro la imagen en la DB");
+
+        if (!image.userID.equals(req.uid)) throw new Error("No eres el propietario de esta imagen");;
 
         const dirFile = path.join(__dirname, `../public/images/uploads/${image.name}`);
         fs.unlinkSync(dirFile);

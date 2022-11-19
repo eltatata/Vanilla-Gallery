@@ -1,7 +1,9 @@
 import "dotenv/config";
+import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
 import { nanoid } from "nanoid";
 import { sendEmailConfirm } from "../utils/sendEmailConfirm.js";
+import { generate_jwt, generate_refresh_jwt } from "../utils/generateTokens.js"
 
 export const register = async (req, res) => {
     try {
@@ -25,16 +27,16 @@ export const register = async (req, res) => {
 
 export const confirm = async (req, res) => {
     try {
-        const user = await User.findOne({tokenConfirm: req.params.token});
+        const user = await User.findOne({ tokenConfirm: req.params.token });
 
-        if(!user) throw new Error("No se encontro el usuario");
+        if (!user) throw new Error("No se encontro el usuario");
 
         user.confirm = true;
         user.tokenConfirm = null;
 
         await user.save();
 
-        res.json({confirm: "Usuario confirmado"});
+        res.json({ confirm: "Usuario confirmado" });
     } catch (error) {
         res.json({ error: error.message });
     }
@@ -50,12 +52,27 @@ export const login = async (req, res) => {
 
         if (!user.confirm) throw new Error("El usuario no esta confirmado, porfavor confimar su cuenta");
 
-        res.json({ login: "Sesion iniciada" });
+        const token = generate_jwt(user._id);
+
+        generate_refresh_jwt(user._id, res);
+
+        res.json({ login: true, token });
     } catch (error) {
-        res.json({ error: error.message });
+        res.json({ login: false, error: error.message });
+    }
+}
+
+export const refreshToken = (req, res) => {
+    try {
+        const {token , expiresIn}  = generate_jwt(req.uid);
+
+        res.json({token, expiresIn});
+    } catch (error) {
+        res.json({error: error.message});
     }
 }
 
 export const logout = async (req, res) => {
+    res.clearCookie("refresh_token");
     res.json({ logout: "Sesion finalizada" });
-}
+}   

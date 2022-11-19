@@ -5,7 +5,7 @@ const { Schema, model } = mongoose;
 const userSchema = new Schema({
     name: {
         type: String,
-        require: true,
+        required: true,
         unique: true
     },
     email: {
@@ -17,7 +17,7 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        require: true,
+        required: true,
         unique: true
     },
     confirm: {

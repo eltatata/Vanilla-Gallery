@@ -4,7 +4,12 @@ const { Schema, model } = mongoose;
 const imageSchema = new Schema({
     name: {
         type: String,
-        require: true
+        required: true
+    },
+    userID: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     }
 }, {
     timestamps: true
