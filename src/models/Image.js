@@ -6,6 +6,14 @@ const imageSchema = new Schema({
         type: String,
         required: true
     },
+    description: {
+        type: String,
+        default: ""
+    },
+    author: {
+        type: String,
+        required: true
+    },
     userID: {
         type: Schema.Types.ObjectId,
         ref: "User",

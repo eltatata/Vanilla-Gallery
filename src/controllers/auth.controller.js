@@ -17,11 +17,11 @@ export const register = async (req, res) => {
 
         console.log(user);
 
-        res.json({ register: "Se creo el usuario" });
+        res.json({ register: true });
 
         sendEmailConfirm(user.email, user.tokenConfirm);
     } catch (error) {
-        res.json({ error: error.message });
+        res.json({ register: false, error: error.message });
     }
 }
 
@@ -36,7 +36,7 @@ export const confirm = async (req, res) => {
 
         await user.save();
 
-        res.json({ confirm: "Usuario confirmado" });
+        res.json({ confirm: true });
     } catch (error) {
         res.json({ error: error.message });
     }
@@ -52,11 +52,9 @@ export const login = async (req, res) => {
 
         if (!user.confirm) throw new Error("El usuario no esta confirmado, porfavor confimar su cuenta");
 
-        const token = generate_jwt(user._id);
+        generate_refresh_jwt(user._id, user.name, res);
 
-        generate_refresh_jwt(user._id, res);
-
-        res.json({ login: true, token });
+        res.json({ login: true });
     } catch (error) {
         res.json({ login: false, error: error.message });
     }
@@ -64,11 +62,11 @@ export const login = async (req, res) => {
 
 export const refreshToken = (req, res) => {
     try {
-        const {token , expiresIn}  = generate_jwt(req.uid);
+        const { token, expiresIn } = generate_jwt(req.uid, req.userName);
 
-        res.json({token, expiresIn});
+        res.json({ token, expiresIn });
     } catch (error) {
-        res.json({error: error.message});
+        res.json({ error: error.message });
     }
 }
 

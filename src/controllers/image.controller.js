@@ -35,15 +35,41 @@ const upload = multer({
     }
 }).single("image");
 
-export const getImages = async (req, res) => {
+export const getAllImages = async (req, res) => {
     try {
-        const images = await Img.find({userID: req.uid}).lean();
+        const images = await Img.find().lean();
+
+        if (!images) throw ("No se encontraron imagenes");
+
+        res.json(images);
+    } catch (error) {
+        res.json({ error: error.message });
+    }
+}
+
+export const getUserImages = async (req, res) => {
+    try {
+        const images = await Img.find({ userID: req.uid }).lean();
 
         if (!images) throw new Error("No hay imagenes en la DB");
 
         res.json(images);
     } catch (error) {
-        res.json(error.message);
+        res.json({ error: error.message });
+    }
+}
+
+export const getImage = async (req, res) => {
+    try {
+        const image = await Img.findById(req.params.id);
+
+        if (!image) throw new Error("No se encontro la imagen en la DB");
+
+        if (!image.userID.equals(req.uid)) throw new Error("No eres el propietario de esta imagen");
+
+        res.json(image);
+    } catch (error) {
+        res.json({ error: error.message });
     }
 }
 
@@ -52,38 +78,47 @@ export const uploadImage = (req, res) => {
         try {
             imageProcessingFailure(err);
 
-            const img = new Img({ name: req.file.filename, userID: req.uid });
+            const image = new Img({
+                name: req.file.filename,
+                description: req.body.description,
+                author: req.userName,
+                userID: req.uid
+            });
 
-            await img.save();
+            await image.save();
 
-            console.log(img);
+            console.log(image);
 
-            res.json({upload: "Se guardo la imagen"});
+            res.json({ upload: "Se guardo la imagen" });
         } catch (error) {
-            res.json({error: error.message});
+            res.json({ error: error.message });
         }
     })
 }
 
-//FALTA RECIBIR EL NUEVO NOMBRE DE LA IMAGEN DEL FRONT Y CAMBIARLO EN EL SERVER Y EN LA DB
-export const editImage = (req, res) => {
-    upload(req, res, async (err) => {
-        try {
-            imageProcessingFailure(err);
+export const editImage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {name, description} = req.body;
 
-            const image = await Img.findById(req.params.id).lean();
+        const image = await Img.findById(id);
+        const extName = image.name.split(".")[1]
 
-            if (!image.userID.equals(req.uid)) throw new Error("No eres el propietario de esta imagen");;
-            
-            const dirFile = path.join(__dirname, `../public/images/uploads/${image.name}`);
+        if (!image.userID.equals(req.uid)) throw new Error("No eres el propietario de esta imagen");
 
-            fs.renameSync(req.file.path, dirFile);
+        const dirFile = path.join(__dirname, `../public/images/uploads/${image.name}`);
 
-            res.json({ edit: `Se edito la imagen: ${image.name}` });
-        } catch (error) {
-            res.json({ error: error.message });
-        }
-    });
+        image.name = `${name}.${extName}`;
+        image.description = description;
+        await image.save();
+
+        // cambiar el nombre de la imagen
+        fs.renameSync(dirFile, path.join(__dirname, `../public/images/uploads/${image.name}`));
+
+        res.json({ edit: `Se edito la imagen: ${id}` });
+    } catch (error) {
+        res.json({ error: error.message });
+    }
 }
 
 export const deleteImage = async (req, res) => {
@@ -92,7 +127,7 @@ export const deleteImage = async (req, res) => {
 
         if (!image) throw new Error("No se encontro la imagen en la DB");
 
-        if (!image.userID.equals(req.uid)) throw new Error("No eres el propietario de esta imagen");;
+        if (!image.userID.equals(req.uid)) throw new Error("No eres el propietario de esta imagen");
 
         const dirFile = path.join(__dirname, `../public/images/uploads/${image.name}`);
         fs.unlinkSync(dirFile);

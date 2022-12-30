@@ -1,9 +1,13 @@
 import express from "express";
-import { deleteImage, editImage, getImages, uploadImage } from "../controllers/image.controller.js";
+import { deleteImage, editImage, getAllImages, getImage, getUserImages, uploadImage } from "../controllers/image.controller.js";
 import { requireToken } from "../middlewares/requireToken.js";
 const router = express.Router();
 
-router.get("/", requireToken, getImages);
+router.get("/", getAllImages);
+
+router.get("/getUserImages", requireToken, getUserImages);
+
+router.get("/getImage/:id", requireToken, getImage); 
 
 router.post("/upload", requireToken, uploadImage);
 

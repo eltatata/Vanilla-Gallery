@@ -9,6 +9,7 @@ export const requireRefreshToken = (req, res , next) => {
         const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH);
 
         req.uid = payload.uid;
+        req.userName = payload.userName;
 
         next();
     } catch (error) {   
